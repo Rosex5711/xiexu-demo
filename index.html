@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="协序产品演示：通过固定公开财报案例，体验研究主张核验、证据摘要与多角色复核过程。">
+  <meta name="description" content="协序产品演示：回放已保存的真实 Tushare 财务数据与公告核对案例，体验研究主张核验和证据回溯。">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <meta name="theme-color" content="#496d7c">
   <title>协序 · 产品演示</title>
   <link rel="icon" href="assets/mark.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
-  <script src="demo.js" defer></script>
+  <link rel="stylesheet" href="styles.css?v=20261027-tushare">
+  <script src="demo.js?v=20261027-tushare" defer></script>
 </head>
 <body>
   <a class="skip" href="#workspace">跳到演示工作台</a>
@@ -26,7 +26,7 @@
       </div>
       <aside class="demo-note" aria-label="演示范围">
         <span class="note-dot" aria-hidden="true"></span><strong>交互演示 · 固定公开案例</strong>
-        <p>页面回放预设结果，不实时调用模型或取数。可切换案例、查看证据摘要，并下载展示摘要。</p>
+        <p>茅台案例回放已保存的真实 Tushare 数据及公告对应记录。页面不实时调用模型或取数。</p>
         <span class="note-caption">无需登录 · 无需配置 token</span>
       </aside>
     </section>
@@ -39,6 +39,7 @@
           <option value="midea">美的集团 · 2025 年一季度</option>
         </select>
         <p id="case-description" class="muted"></p>
+        <p id="data-origin" class="data-origin"></p>
         <h2 class="small-title">待核验主张</h2>
         <ol id="input-claims" class="input-claims"></ol>
         <button id="run-demo" class="button primary" type="button">播放案例</button>
@@ -70,9 +71,11 @@
           </div>
           <div class="tabs" role="tablist" aria-label="结果详情">
             <button id="evidence-tab" role="tab" aria-selected="true" aria-controls="evidence-panel" tabindex="0">证据摘要</button>
+            <button id="data-tab" role="tab" aria-selected="false" aria-controls="data-panel" tabindex="-1">Tushare 数据</button>
             <button id="review-tab" role="tab" aria-selected="false" aria-controls="review-panel" tabindex="-1">复核说明</button>
           </div>
           <section id="evidence-panel" class="detail-panel" role="tabpanel" aria-labelledby="evidence-tab"></section>
+          <section id="data-panel" class="detail-panel" role="tabpanel" aria-labelledby="data-tab" hidden></section>
           <section id="review-panel" class="detail-panel" role="tabpanel" aria-labelledby="review-tab" hidden></section>
           <p class="result-footnote">这里展示经过选取的公开资料与结果摘要。任意输入、真实取数、模型核验和完整证据包不在本演示范围内。</p>
         </div>

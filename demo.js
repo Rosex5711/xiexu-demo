@@ -6,6 +6,21 @@ const CASES = {
     company: "贵州茅台", code: "600519.SH", period: "2025Q1",
     description: "同一份公开财报，展示三种不同的核验结论。",
     source: "https://www.moutaichina.com/mtgf/articleFileDir/2025-05/08/3329e26c2c524b318c83e6296e354021.pdf",
+    snapshot: {
+      capturedAt: "2026-10-12 19:29:00–19:29:01（北京时间）",
+      rows: [
+        ["本期营业收入", "income", "revenue", "20250331", "50,600,957,885.78", "0"],
+        ["上年同期营业收入", "income", "revenue", "20240331", "45,775,517,043.29", "0"],
+        ["本期归母净利润", "income", "n_income_attr_p", "20250331", "26,847,474,238.76", "0"],
+        ["上年同期归母净利润", "income", "n_income_attr_p", "20240331", "24,065,262,374.15", "0"],
+        ["本期经营现金流净额", "cashflow", "n_cashflow_act", "20250331", "8,809,195,646.38", "1"]
+      ],
+      fingerprints: [
+        ["income · 20250331", "a5d65a926f1833f5da58a66d02763855f24f95ffe92a13d65a32b3202602acdb"],
+        ["income · 20240331", "52c75f5ff8d7f64151d2700a40a5e9bd2fa440dd505fea5e621ab0d70a6b520e"],
+        ["cashflow · 20250331", "5aac3c079bffa8b2f3a6e6a01044346eab462f3923bc63587f5b34fbe5e12828"]
+      ]
+    },
     steps: ["分析 · 首轮", "核验 · 首轮", "分析 · 补充原文后", "核验 · 再次复查", "报告 · 整理结果"],
     claims: [
       {
@@ -57,6 +72,7 @@ const CASES = {
 };
 
 const $ = id => document.getElementById(id);
+const TABS = ["evidence", "data", "review"];
 let currentKey = "maotai";
 let selectedClaim = 0;
 let ready = false;
@@ -72,7 +88,7 @@ function el(tag, className, text) {
 
 function setTab(name, moveFocus = false) {
   chosenTab = name;
-  for (const key of ["evidence", "review"]) {
+  for (const key of TABS) {
     const active = key === name;
     $(key + "-tab").setAttribute("aria-selected", String(active));
     $(key + "-tab").tabIndex = active ? 0 : -1;
@@ -86,6 +102,8 @@ function renderCase() {
   ready = false;
   selectedClaim = 0;
   $("case-description").textContent = data.description;
+  $("data-origin").textContent = data.snapshot ? "数据来源：Tushare 真实取数存档 + 公司公告（快照回放）" : "数据来源：公司公开公告（原文核对案例）";
+  $("data-tab").textContent = data.snapshot ? "Tushare 数据" : "资料来源";
   $("input-claims").replaceChildren(...data.claims.map(c => el("li", "", c.title)));
   $("result-company").replaceChildren(document.createTextNode(data.company + " "), el("span", "", data.period));
   $("steps").replaceChildren(...data.steps.map((text, i) => {
@@ -111,7 +129,7 @@ function renderEvidence() {
     const table = el("table");
     const thead = el("thead");
     const header = el("tr");
-    for (const label of ["公开财报指标", "原始金额 / 人民币元"]) {
+    for (const label of [data.snapshot ? "Tushare 存档指标" : "公开财报指标", "原始金额 / 人民币元"]) {
       const th = el("th", "", label);
       th.scope = "col";
       header.append(th);
@@ -146,10 +164,71 @@ function renderEvidence() {
     links.append(a);
   }
   panel.append(links, el("p", "muted", "资料为公开季报的选取摘要；页码为 PDF 物理页码。"));
+  if (data.snapshot) panel.append(el("p", "snapshot-caption", "金额来自已保存的真实 Tushare 接口响应，并与公告对应。获取时间：" + data.snapshot.capturedAt + "。在“Tushare 数据”页签可查看精选字段与原值。"));
   const list = el("ul");
   list.append(...c.review.map(text => el("li", "", text)));
   $("review-panel").replaceChildren(el("h4", "", "为什么得到这个结果"), list,
     el("p", "muted", "页面仅回放预设结果与步骤概述，没有执行新的分析、核验或模型调用。"));
+}
+
+function renderSnapshot() {
+  const data = CASES[currentKey];
+  const panel = $("data-panel");
+  panel.replaceChildren();
+  if (!data.snapshot) {
+    panel.append(el("h4", "", "本案例使用公司公开公告"),
+      el("p", "", "美的案例核对两处公司原文，没有使用 Tushare 取数快照。需要查看接口数据展示，可切换至贵州茅台案例。"));
+    const a = el("a", "", "打开公司季报 ↗");
+    a.href = data.source;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    panel.append(a);
+    return;
+  }
+  const snapshot = data.snapshot;
+  panel.append(el("h4", "", "真实 Tushare 取数存档 · 精选字段"),
+    el("p", "", "以下五个输入已与保存的真实接口响应及公司公告逐项核对。这里展示存档节选，页面不会请求 Tushare。"),
+    el("p", "snapshot-caption", "实际获取时间：" + snapshot.capturedAt),
+    el("p", "muted", "接口：income（利润表）× 2，cashflow（现金流量表）× 1；企业：600519.SH；原始单位：人民币元。"));
+  const wrapper = el("div", "snapshot-table-wrap");
+  wrapper.tabIndex = 0;
+  wrapper.setAttribute("role", "region");
+  wrapper.setAttribute("aria-label", "Tushare 精选字段表，可左右滚动");
+  const table = el("table", "snapshot-table");
+  const thead = el("thead");
+  const header = el("tr");
+  for (const title of ["指标 / 接口", "原始字段", "报告期", "响应行号", "原始金额 / 元"]) {
+    const th = el("th", "", title);
+    th.scope = "col";
+    header.append(th);
+  }
+  thead.append(header);
+  const tbody = el("tbody");
+  for (const row of snapshot.rows) {
+    const tr = el("tr");
+    const label = el("td");
+    label.append(document.createTextNode(row[0]), el("small", "", row[1]));
+    tr.append(label, el("td", "field-code", row[2]), el("td", "", row[3]), el("td", "", row[5]), el("td", "", row[4]));
+    tbody.append(tr);
+  }
+  table.append(thead, tbody);
+  wrapper.append(table);
+  panel.append(wrapper, el("p", "muted", "五项金额对应贵州茅台季报 PDF 第 1 页。行号为原始响应的从 0 开始索引；窄屏可横向滚动表格。"));
+  const linkRow = el("div", "source-links");
+  for (const [title, href] of [["对照公告第 1 页", data.source + "#page=1"], ["Tushare 利润表字段文档", "https://tushare.pro/document/2?doc_id=33"], ["Tushare 现金流量表字段文档", "https://tushare.pro/document/2?doc_id=44"]]) {
+    const a = el("a", "", title + " ↗");
+    a.href = href;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    linkRow.append(a);
+  }
+  panel.append(linkRow);
+  const fingerprints = el("details", "snapshot-fingerprints");
+  fingerprints.append(el("summary", "", "查看原始存档响应的 SHA-256 指纹"));
+  for (const [label, digest] of snapshot.fingerprints) {
+    fingerprints.append(el("p", "muted", label), el("code", "", digest));
+  }
+  panel.append(fingerprints, el("p", "muted", "该存档是获取当时的 current 服务快照，不代表今日最新数据，也不能据此还原历史研究时点的可得版本。原始完整响应保存在受控环境，公开演示仅含上述节选。"));
 }
 
 function renderResults() {
@@ -170,6 +249,7 @@ function renderResults() {
     return button;
   }));
   renderEvidence();
+  renderSnapshot();
   setTab(chosenTab);
 }
 
@@ -218,6 +298,12 @@ function downloadSummary() {
   const data = CASES[currentKey];
   const lines = ["协序 · 产品演示摘要", data.company + " / " + data.code + " / " + data.period, "",
     "固定案例回放；不代表本次执行了真实模型核验或数据获取。", ""];
+  if (data.snapshot) {
+    lines.push("金额来源：已保存的真实 Tushare 取数快照，并与公司公告核对。", "实际获取时间：" + data.snapshot.capturedAt,
+      "精选字段（指标 / 接口 / 字段 / 报告期 / 原始金额，人民币元 / 从0开始响应行号）：");
+    for (const row of data.snapshot.rows) lines.push(row.join(" / "));
+    lines.push("该存档不代表今日最新数据，不用于直接还原历史时点可得版本。", "");
+  } else lines.push("本案例资料来源：公司公开公告；未使用 Tushare 取数快照。", "");
   data.claims.forEach((c, i) => {
     lines.push("主张 " + (i + 1) + "：" + c.title, "展示结果：" + c.status + "；" + c.value, c.description);
     for (const row of c.rows || []) lines.push(row[0] + "：" + row[1] + " 元");
@@ -247,12 +333,13 @@ $("case-select").addEventListener("change", event => {
 $("run-demo").addEventListener("click", runPlayback);
 $("reset-demo").addEventListener("click", () => { if (!playing) renderCase(); });
 $("download-summary").addEventListener("click", downloadSummary);
-for (const name of ["evidence", "review"]) {
+for (const name of TABS) {
   $(name + "-tab").addEventListener("click", () => setTab(name));
   $(name + "-tab").addEventListener("keydown", event => {
     if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
       event.preventDefault();
-      setTab(name === "evidence" ? "review" : "evidence", true);
+      const offset = event.key === "ArrowRight" ? 1 : -1;
+      setTab(TABS[(TABS.indexOf(name) + offset + TABS.length) % TABS.length], true);
     }
   });
 }

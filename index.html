@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="协序产品演示：通过固定公开财报案例，体验研究主张核验、证据摘要与多角色复核过程。">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta name="theme-color" content="#496d7c">
+  <title>协序 · 产品演示</title>
+  <link rel="icon" href="assets/mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="demo.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#workspace">跳到演示工作台</a>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="协序演示首页"><span class="brand-mark" aria-hidden="true">协</span><span>协序 <small>XIEXU</small></span></a>
+    <nav aria-label="页面导航"><a href="#workspace">体验演示</a><a href="#about">了解协序</a><a href="https://github.com/Rosex5711/xiexu-demo" target="_blank" rel="noopener noreferrer">展示仓库 ↗</a></nav>
+  </header>
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div>
+        <p class="eyebrow">金融研究 · 主张核验与证据回溯</p>
+        <h1 id="hero-title">一句投研判断，<br>依据也能一起交接。</h1>
+        <p class="hero-description">查看支持、反驳与证据不足的不同结果，沿着计算与公告出处，继续复核。</p>
+      </div>
+      <aside class="demo-note" aria-label="演示范围">
+        <span class="note-dot" aria-hidden="true"></span><strong>交互演示 · 固定公开案例</strong>
+        <p>页面回放预设结果，不实时调用模型或取数。可切换案例、查看证据摘要，并下载展示摘要。</p>
+        <span class="note-caption">无需登录 · 无需配置 token</span>
+      </aside>
+    </section>
+    <section id="workspace" class="workspace" aria-label="案例演示工作台">
+      <aside class="case-panel">
+        <div class="section-label"><span>01</span> 选择公开案例</div>
+        <label class="field-label" for="case-select">公司与报告期</label>
+        <select id="case-select">
+          <option value="maotai">贵州茅台 · 2025 年一季度</option>
+          <option value="midea">美的集团 · 2025 年一季度</option>
+        </select>
+        <p id="case-description" class="muted"></p>
+        <h2 class="small-title">待核验主张</h2>
+        <ol id="input-claims" class="input-claims"></ol>
+        <button id="run-demo" class="button primary" type="button">播放案例</button>
+        <button id="reset-demo" class="button secondary" type="button" disabled>重置演示</button>
+        <div class="playback-block">
+          <div class="section-label"><span>02</span> 协作步骤概览</div>
+          <p class="muted playback-note">根据既有案例整理的步骤摘要，非本次模型运行记录。</p>
+          <ol id="steps" class="steps" aria-label="案例回放步骤"></ol>
+          <progress id="progress" value="0" max="5" aria-label="案例回放进度"></progress>
+        </div>
+      </aside>
+      <div class="result-panel">
+        <div class="panel-header">
+          <div><p class="eyebrow">研究主张核验</p><h2 id="result-company">贵州茅台 <span>2025Q1</span></h2></div>
+          <span class="mode-label">案例回放</span>
+        </div>
+        <p id="status" class="status" role="status" aria-live="polite">选择案例后，点击“播放案例”。</p>
+        <div id="empty-state" class="empty-state">
+          <div class="empty-symbol" aria-hidden="true">“</div>
+          <h3>判断之外，还要看依据。</h3>
+          <p>演示将逐条呈现结论、计算依据、原文出处与仍待补充的材料。</p>
+          <div class="outcome-legend"><span class="tag support">支持</span><span class="tag refute">反驳</span><span class="tag insufficient">证据不足</span></div>
+        </div>
+        <div id="results" hidden>
+          <div id="claim-results" class="claim-results" aria-label="核验结果，点击查看对应依据"></div>
+          <div class="evidence-header">
+            <div><span class="section-number">03</span><h3>展开对应依据</h3></div>
+            <button id="download-summary" class="text-button" type="button">下载示例摘要 ↓</button>
+          </div>
+          <div class="tabs" role="tablist" aria-label="结果详情">
+            <button id="evidence-tab" role="tab" aria-selected="true" aria-controls="evidence-panel" tabindex="0">证据摘要</button>
+            <button id="review-tab" role="tab" aria-selected="false" aria-controls="review-panel" tabindex="-1">复核说明</button>
+          </div>
+          <section id="evidence-panel" class="detail-panel" role="tabpanel" aria-labelledby="evidence-tab"></section>
+          <section id="review-panel" class="detail-panel" role="tabpanel" aria-labelledby="review-tab" hidden></section>
+          <p class="result-footnote">这里展示经过选取的公开资料与结果摘要。任意输入、真实取数、模型核验和完整证据包不在本演示范围内。</p>
+        </div>
+      </div>
+    </section>
+    <section id="about" class="about">
+      <div class="section-label"><span>关于</span> 协序</div>
+      <h2>让接手研究的人，<br>能够继续检查。</h2>
+      <div class="about-copy">
+        <p>协序面向金融研究中的主张复核。研究人员不仅需要结论，还需要知道数字如何比较、原文是否支持，以及缺少哪些材料。</p>
+        <p>完整系统通过角色分工、计算校验与证据留存组织复核过程。本页面展示其使用方式；完整服务在受控环境中提供。</p>
+        <p class="muted">示例来自 2025 年一季度公开财报，仅用于产品演示，不构成投资建议。公司原文对经营原因的说明，也不等于独立证明经济因果。</p>
+      </div>
+    </section>
+  </main>
+  <footer><span>© 2026 知衡队 · 协序</span><span>产品展示资料 · 权利保留</span><a href="https://github.com/Rosex5711/xiexu-demo/blob/main/RIGHTS.md" target="_blank" rel="noopener noreferrer">使用范围 ↗</a></footer>
+</body>
+</html>
